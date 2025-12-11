@@ -13,6 +13,9 @@ public class CompanyPanel extends JPanel {
     private DefaultTableModel appsModel;
     private JTable myJobsTable;
     private DefaultTableModel jobsModel;
+    private JTable candidatesTable;
+    private DefaultTableModel candidatesModel;
+    private JTextField candidateSearchField;
 
     public CompanyPanel(MainFrame frame) {
         this.mainFrame = frame;
@@ -45,6 +48,14 @@ public class CompanyPanel extends JPanel {
         // Tab 2: Manage Applications
         JPanel manageAppsPanel = createManageAppsPanel();
         tabs.addTab("Manage Applications", manageAppsPanel);
+
+        // Tab 3: Manage Jobs
+        JPanel manageJobsPanel = createManageJobsPanel();
+        tabs.addTab("Manage Jobs", manageJobsPanel);
+
+        // Tab 4: Search Candidates
+        JPanel searchCandidatesPanel = createSearchCandidatesPanel();
+        tabs.addTab("Search Candidates", searchCandidatesPanel);
 
         add(tabs, BorderLayout.CENTER);
     }
@@ -121,7 +132,72 @@ public class CompanyPanel extends JPanel {
 
         JButton nextStateBtn = new JButton("Move to Next Stage");
         nextStateBtn.addActionListener(e -> moveState());
-        panel.add(nextStateBtn, BorderLayout.SOUTH);
+
+        JButton viewResumeBtn = new JButton("View Resume");
+        viewResumeBtn.addActionListener(e -> viewResume());
+
+        JButton viewProfileBtn = new JButton("View Profile");
+        viewProfileBtn.addActionListener(e -> viewApplicantProfile());
+
+        JPanel btnPanel = new JPanel();
+        btnPanel.add(nextStateBtn);
+        btnPanel.add(viewResumeBtn);
+        btnPanel.add(viewProfileBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createManageJobsPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JButton refreshBtn = new JButton("Refresh Jobs");
+        refreshBtn.addActionListener(e -> refreshMyJobs());
+        panel.add(refreshBtn, BorderLayout.NORTH);
+
+        String[] cols = { "ID", "Title", "Status" };
+        jobsModel = new DefaultTableModel(cols, 0);
+        myJobsTable = new JTable(jobsModel);
+        panel.add(new JScrollPane(myJobsTable), BorderLayout.CENTER);
+
+        JPanel btnPanel = new JPanel();
+        JButton editBtn = new JButton("Edit Title");
+        editBtn.addActionListener(e -> editJob());
+
+        JButton toggleBtn = new JButton("Pause/Resume");
+        toggleBtn.addActionListener(e -> toggleJobStatus());
+
+        JButton removeBtn = new JButton("Remove");
+        removeBtn.addActionListener(e -> removeJob());
+
+        btnPanel.add(editBtn);
+        btnPanel.add(toggleBtn);
+        btnPanel.add(removeBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createSearchCandidatesPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JPanel searchPanel = new JPanel();
+        candidateSearchField = new JTextField(20);
+        JButton searchBtn = new JButton("Search");
+        searchBtn.addActionListener(e -> searchCandidates());
+        searchPanel.add(new JLabel("Name/Email:"));
+        searchPanel.add(candidateSearchField);
+        searchPanel.add(searchBtn);
+        panel.add(searchPanel, BorderLayout.NORTH);
+
+        String[] cols = { "Username", "Email" };
+        candidatesModel = new DefaultTableModel(cols, 0);
+        candidatesTable = new JTable(candidatesModel);
+        panel.add(new JScrollPane(candidatesTable), BorderLayout.CENTER);
+
+        JButton viewProfileBtn = new JButton("View Candidate Profile");
+        viewProfileBtn.addActionListener(e -> viewCandidateProfile());
+        panel.add(viewProfileBtn, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -145,19 +221,9 @@ public class CompanyPanel extends JPanel {
         if (row == -1)
             return;
 
-        // This is a bit tricky since we need the actual object.
-        // For simplicity, we'll search again or store it in the model (not shown for
-        // brevity)
-        // Let's just re-fetch based on row index is risky if sorted, but okay for
-        // simple demo
-        // Better: Store Application object in a hidden column or separate list
-
-        // Re-fetching logic for demo:
         String jobTitle = (String) appsModel.getValueAt(row, 0);
         String applicant = (String) appsModel.getValueAt(row, 1);
 
-        // Find the application
-        // In a real app, use IDs. Here we iterate.
         List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicant);
         for (JobApplication app : allApps) {
             if (app.getJob().getTitle().equals(jobTitle)) {
@@ -166,5 +232,134 @@ public class CompanyPanel extends JPanel {
             }
         }
         refreshApps();
+    }
+
+    private void viewResume() {
+        int row = appsTable.getSelectedRow();
+        if (row == -1)
+            return;
+
+        String jobTitle = (String) appsModel.getValueAt(row, 0);
+        String applicantName = (String) appsModel.getValueAt(row, 1);
+
+        JobApplication app = findApplication(jobTitle, applicantName);
+        if (app != null && app.getResumePath() != null) {
+            try {
+                Desktop.getDesktop().open(new java.io.File(app.getResumePath()));
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error opening resume: " + e.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "No resume found.");
+        }
+    }
+
+    private void viewApplicantProfile() {
+        int row = appsTable.getSelectedRow();
+        if (row == -1)
+            return;
+        String applicantName = (String) appsModel.getValueAt(row, 1);
+        showUserProfile(applicantName);
+    }
+
+    private JobApplication findApplication(String jobTitle, String applicantName) {
+        List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicantName);
+        for (JobApplication app : allApps) {
+            if (app.getJob().getTitle().equals(jobTitle)) {
+                return app;
+            }
+        }
+        return null;
+    }
+
+    // Job Management Methods
+    private void refreshMyJobs() {
+        jobsModel.setRowCount(0);
+        User user = DataManager.getInstance().getCurrentUser();
+        List<Job> myJobs = DataManager.getInstance().getJobsByCompany(user.getUsername());
+        for (Job j : myJobs) {
+            jobsModel.addRow(new Object[] { j.getId(), j.getTitle(), j.isActive() ? "Active" : "Paused" });
+        }
+    }
+
+    private void editJob() {
+        int row = myJobsTable.getSelectedRow();
+        if (row == -1)
+            return;
+        String jobId = (String) jobsModel.getValueAt(row, 0);
+        Job job = findJob(jobId);
+        if (job != null) {
+            String newTitle = JOptionPane.showInputDialog(this, "Enter new title:", job.getTitle());
+            if (newTitle != null && !newTitle.isEmpty()) {
+                job.setTitle(newTitle);
+                refreshMyJobs();
+            }
+        }
+    }
+
+    private void toggleJobStatus() {
+        int row = myJobsTable.getSelectedRow();
+        if (row == -1)
+            return;
+        String jobId = (String) jobsModel.getValueAt(row, 0);
+        Job job = findJob(jobId);
+        if (job != null) {
+            job.setActive(!job.isActive());
+            refreshMyJobs();
+        }
+    }
+
+    private void removeJob() {
+        int row = myJobsTable.getSelectedRow();
+        if (row == -1)
+            return;
+        String jobId = (String) jobsModel.getValueAt(row, 0);
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Remove Job", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            DataManager.getInstance().removeJob(jobId);
+            refreshMyJobs();
+        }
+    }
+
+    private Job findJob(String jobId) {
+        return DataManager.getInstance().getJobs().stream()
+                .filter(j -> j.getId().equals(jobId))
+                .findFirst().orElse(null);
+    }
+
+    // Candidate Search Methods
+    private void searchCandidates() {
+        candidatesModel.setRowCount(0);
+        String query = candidateSearchField.getText().toLowerCase();
+        List<User> applicants = DataManager.getInstance().getAllApplicants();
+        for (User u : applicants) {
+            if (u.getUsername().toLowerCase().contains(query)
+                    || (u.getEmail() != null && u.getEmail().toLowerCase().contains(query))) {
+                candidatesModel.addRow(new Object[] { u.getUsername(), u.getEmail() });
+            }
+        }
+    }
+
+    private void viewCandidateProfile() {
+        int row = candidatesTable.getSelectedRow();
+        if (row == -1)
+            return;
+        String username = (String) candidatesModel.getValueAt(row, 0);
+        showUserProfile(username);
+    }
+
+    private void showUserProfile(String username) {
+        // In a real app, we'd fetch the user object.
+        // For now, we iterate.
+        List<User> applicants = DataManager.getInstance().getAllApplicants();
+        User target = applicants.stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
+
+        if (target != null) {
+            Applicant app = (Applicant) target;
+            String info = "Username: " + app.getUsername() + "\n" +
+                    "Email: " + app.getEmail() + "\n" +
+                    "Resume Path: " + app.getResumePath();
+            JOptionPane.showMessageDialog(this, info, "Candidate Profile", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 }

@@ -21,15 +21,46 @@ public class Job {
     }
 
     // Getters
-    public String getId() { return id; }
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public String getCompanyUsername() { return companyUsername; }
-    public String getRequirements() { return requirements; }
-    public boolean isActive() { return isActive; }
-    
-    public void setActive(boolean active) { this.isActive = active; }
-    
+    public String getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getCompanyUsername() {
+        return companyUsername;
+    }
+
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
     @Override
     public String toString() {
         return title + " at " + companyUsername;

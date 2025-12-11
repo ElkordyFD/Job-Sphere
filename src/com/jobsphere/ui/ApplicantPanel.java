@@ -16,6 +16,7 @@ public class ApplicantPanel extends JPanel {
 
     private JToggleButton showSavedBtn;
     private JButton saveBtn;
+    private static final String RESUME_DIR = "resumes";
 
     public ApplicantPanel(MainFrame frame) {
         this.mainFrame = frame;
@@ -219,6 +220,31 @@ public class ApplicantPanel extends JPanel {
 
             if (resumeToUse == null || resumeToUse.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Resume is required!");
+                return;
+            }
+
+            // Copy resume to local directory
+            try {
+                java.io.File source = new java.io.File(resumeToUse);
+                java.io.File destDir = new java.io.File(RESUME_DIR);
+                if (!destDir.exists())
+                    destDir.mkdir();
+
+                String ext = "";
+                int i = source.getName().lastIndexOf('.');
+                if (i > 0)
+                    ext = source.getName().substring(i);
+
+                String destName = applicant.getUsername() + "_" + System.currentTimeMillis() + ext;
+                java.io.File dest = new java.io.File(destDir, destName);
+
+                java.nio.file.Files.copy(source.toPath(), dest.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                resumeToUse = dest.getAbsolutePath();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error uploading resume: " + e.getMessage());
                 return;
             }
 

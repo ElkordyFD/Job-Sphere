@@ -70,6 +70,20 @@ public class DataManager {
         return companyJobs;
     }
 
+    public void removeJob(String jobId) {
+        jobs.removeIf(j -> j.getId().equals(jobId));
+    }
+
+    public List<User> getAllApplicants() {
+        List<User> applicants = new ArrayList<>();
+        for (User u : users) {
+            if (u.getRole().equals("APPLICANT")) {
+                applicants.add(u);
+            }
+        }
+        return applicants;
+    }
+
     // Application Management
     private List<JobApplication> applications = new ArrayList<>();
 

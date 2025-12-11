@@ -14,7 +14,25 @@ public abstract class User {
         this.email = email;
     }
 
-    public String getUsername() { return username; }
-    public boolean checkPassword(String password) { return this.password.equals(password); }
+    public String getUsername() {
+        return username;
+    }
+
+    public boolean checkPassword(String password) {
+        return this.password.equals(password);
+    }
+
     public abstract String getRole();
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
