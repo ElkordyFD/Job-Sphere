@@ -29,7 +29,7 @@ public class CompanyPanel extends JPanel {
         title.setFont(new Font("Arial", Font.BOLD, 18));
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.addActionListener(e -> {
-            DataManager.getInstance().logout();
+            DataManager.getInstance().getAuthService().logout();
             mainFrame.showCard("LOGIN");
         });
 
@@ -96,14 +96,14 @@ public class CompanyPanel extends JPanel {
         add(postBtn, gbc, panel);
 
         postBtn.addActionListener(e -> {
-            User user = DataManager.getInstance().getCurrentUser();
+            User user = DataManager.getInstance().getAuthService().getCurrentUser();
             Job job = new JobBuilder()
                     .setTitle(titleField.getText())
                     .setDescription(descArea.getText())
                     .setRequirements(reqArea.getText())
                     .setCompanyUsername(user.getUsername())
                     .build();
-            DataManager.getInstance().addJob(job);
+            DataManager.getInstance().getJobRepository().addJob(job);
             JOptionPane.showMessageDialog(this, "Job Posted!");
             titleField.setText("");
             descArea.setText("");
@@ -204,12 +204,12 @@ public class CompanyPanel extends JPanel {
 
     private void refreshApps() {
         appsModel.setRowCount(0);
-        User user = DataManager.getInstance().getCurrentUser();
+        User user = DataManager.getInstance().getAuthService().getCurrentUser();
         // Get all jobs for this company
-        List<Job> myJobs = DataManager.getInstance().getJobsByCompany(user.getUsername());
+        List<Job> myJobs = DataManager.getInstance().getJobRepository().getJobsByCompany(user.getUsername());
 
         for (Job job : myJobs) {
-            List<JobApplication> apps = DataManager.getInstance().getApplicationsForJob(job.getId());
+            List<JobApplication> apps = DataManager.getInstance().getApplicationRepository().getApplicationsForJob(job.getId());
             for (JobApplication app : apps) {
                 appsModel.addRow(new Object[] { job.getTitle(), app.getApplicantUsername(), app.getStatus() });
             }
@@ -224,7 +224,7 @@ public class CompanyPanel extends JPanel {
         String jobTitle = (String) appsModel.getValueAt(row, 0);
         String applicant = (String) appsModel.getValueAt(row, 1);
 
-        List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicant);
+        List<JobApplication> allApps = DataManager.getInstance().getApplicationRepository().getApplicationsByUser(applicant);
         for (JobApplication app : allApps) {
             if (app.getJob().getTitle().equals(jobTitle)) {
                 app.next(); // State Pattern in action
@@ -263,7 +263,7 @@ public class CompanyPanel extends JPanel {
     }
 
     private JobApplication findApplication(String jobTitle, String applicantName) {
-        List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicantName);
+        List<JobApplication> allApps = DataManager.getInstance().getApplicationRepository().getApplicationsByUser(applicantName);
         for (JobApplication app : allApps) {
             if (app.getJob().getTitle().equals(jobTitle)) {
                 return app;
@@ -275,8 +275,8 @@ public class CompanyPanel extends JPanel {
     // Job Management Methods
     private void refreshMyJobs() {
         jobsModel.setRowCount(0);
-        User user = DataManager.getInstance().getCurrentUser();
-        List<Job> myJobs = DataManager.getInstance().getJobsByCompany(user.getUsername());
+        User user = DataManager.getInstance().getAuthService().getCurrentUser();
+        List<Job> myJobs = DataManager.getInstance().getJobRepository().getJobsByCompany(user.getUsername());
         for (Job j : myJobs) {
             jobsModel.addRow(new Object[] { j.getId(), j.getTitle(), j.isActive() ? "Active" : "Paused" });
         }
@@ -316,13 +316,13 @@ public class CompanyPanel extends JPanel {
         String jobId = (String) jobsModel.getValueAt(row, 0);
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Remove Job", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            DataManager.getInstance().removeJob(jobId);
+            DataManager.getInstance().getJobRepository().removeJob(jobId);
             refreshMyJobs();
         }
     }
 
     private Job findJob(String jobId) {
-        return DataManager.getInstance().getJobs().stream()
+        return DataManager.getInstance().getJobRepository().getJobs().stream()
                 .filter(j -> j.getId().equals(jobId))
                 .findFirst().orElse(null);
     }
@@ -331,7 +331,7 @@ public class CompanyPanel extends JPanel {
     private void searchCandidates() {
         candidatesModel.setRowCount(0);
         String query = candidateSearchField.getText().toLowerCase();
-        List<User> applicants = DataManager.getInstance().getAllApplicants();
+        List<User> applicants = DataManager.getInstance().getUserRepository().getAllApplicants();
         for (User u : applicants) {
             if (u.getUsername().toLowerCase().contains(query)
                     || (u.getEmail() != null && u.getEmail().toLowerCase().contains(query))) {
@@ -351,7 +351,7 @@ public class CompanyPanel extends JPanel {
     private void showUserProfile(String username) {
         // In a real app, we'd fetch the user object.
         // For now, we iterate.
-        List<User> applicants = DataManager.getInstance().getAllApplicants();
+        List<User> applicants = DataManager.getInstance().getUserRepository().getAllApplicants();
         User target = applicants.stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
 
         if (target != null) {

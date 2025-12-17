@@ -35,7 +35,7 @@ public class ApplicantPanel extends JPanel {
 
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.addActionListener(e -> {
-            DataManager.getInstance().logout();
+            DataManager.getInstance().getAuthService().logout();
             mainFrame.showCard("LOGIN");
         });
 
@@ -100,7 +100,7 @@ public class ApplicantPanel extends JPanel {
         int row = jobTable.getSelectedRow();
         if (row != -1) {
             String jobId = (String) tableModel.getValueAt(row, 0);
-            Applicant applicant = (Applicant) DataManager.getInstance().getCurrentUser();
+            Applicant applicant = (Applicant) DataManager.getInstance().getAuthService().getCurrentUser();
             if (applicant.isJobSaved(jobId)) {
                 saveBtn.setText("Unsave Job");
             } else {
@@ -114,10 +114,10 @@ public class ApplicantPanel extends JPanel {
 
     private void refreshJobList() {
         tableModel.setRowCount(0);
-        List<Job> allJobs = DataManager.getInstance().getJobs();
+        List<Job> allJobs = DataManager.getInstance().getJobRepository().getJobs();
         List<Job> filtered = searchStrategy.search(allJobs, searchField.getText());
 
-        Applicant applicant = (Applicant) DataManager.getInstance().getCurrentUser();
+        Applicant applicant = (Applicant) DataManager.getInstance().getAuthService().getCurrentUser();
         boolean showSaved = showSavedBtn.isSelected();
 
         for (Job j : filtered) {
@@ -136,7 +136,7 @@ public class ApplicantPanel extends JPanel {
             return;
 
         String jobId = (String) tableModel.getValueAt(row, 0);
-        Applicant applicant = (Applicant) DataManager.getInstance().getCurrentUser();
+        Applicant applicant = (Applicant) DataManager.getInstance().getAuthService().getCurrentUser();
 
         if (applicant.isJobSaved(jobId)) {
             applicant.removeSavedJob(jobId);
@@ -150,7 +150,7 @@ public class ApplicantPanel extends JPanel {
     }
 
     private void showProfile() {
-        Applicant applicant = (Applicant) DataManager.getInstance().getCurrentUser();
+        Applicant applicant = (Applicant) DataManager.getInstance().getAuthService().getCurrentUser();
         JTextField emailField = new JTextField(applicant.getEmail());
         JTextField resumeField = new JTextField(applicant.getResumePath());
         JButton browseBtn = new JButton("Browse");
@@ -186,11 +186,11 @@ public class ApplicantPanel extends JPanel {
         }
 
         String jobId = (String) tableModel.getValueAt(row, 0);
-        Job selectedJob = DataManager.getInstance().getJobs().stream()
+        Job selectedJob = DataManager.getInstance().getJobRepository().getJobs().stream()
                 .filter(j -> j.getId().equals(jobId)).findFirst().orElse(null);
 
         if (selectedJob != null) {
-            User currentUser = DataManager.getInstance().getCurrentUser();
+            User currentUser = DataManager.getInstance().getAuthService().getCurrentUser();
             Applicant applicant = (Applicant) currentUser;
 
             String resumeToUse = applicant.getResumePath();
@@ -249,7 +249,7 @@ public class ApplicantPanel extends JPanel {
             }
 
             JobApplication app = new JobApplication(currentUser.getUsername(), selectedJob, resumeToUse);
-            DataManager.getInstance().addApplication(app);
+            DataManager.getInstance().getApplicationRepository().addApplication(app);
             JOptionPane.showMessageDialog(this, "Applied successfully!");
         }
     }

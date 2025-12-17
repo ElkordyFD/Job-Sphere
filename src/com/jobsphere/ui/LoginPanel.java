@@ -81,10 +81,10 @@ public class LoginPanel extends JPanel {
         String user = userField.getText();
         String pass = new String(passField.getPassword());
 
-        User loggedInUser = DataManager.getInstance().login(user, pass);
-        if (loggedInUser != null) {
-            JOptionPane.showMessageDialog(this, "Welcome " + loggedInUser.getUsername());
-            if (loggedInUser instanceof Applicant) {
+       boolean isLogged = DataManager.getInstance().getAuthService().login(user, pass);
+        if (isLogged) {
+            JOptionPane.showMessageDialog(this, "Welcome " + DataManager.getInstance().getAuthService().getCurrentUser().getUsername());
+            if (DataManager.getInstance().getAuthService().getCurrentUser() instanceof Applicant) {
                 mainFrame.addCard(new ApplicantPanel(mainFrame), "APPLICANT");
                 mainFrame.showCard("APPLICANT");
             } else {
@@ -108,7 +108,7 @@ public class LoginPanel extends JPanel {
 
         try {
             User newUser = UserFactory.createUser(role, user, pass, user + "@example.com");
-            DataManager.getInstance().registerUser(newUser);
+            DataManager.getInstance().getUserRepository().registerUser(newUser);
             JOptionPane.showMessageDialog(this, "Registration Successful! Please Login.");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
