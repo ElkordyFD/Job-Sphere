@@ -1,0 +1,21 @@
+Develop a comprehensive, simple, and well-commented Habit Tracker application that incorporates all features below. Prioritize the most straightforward implementation for each requirement to ensure code clarity and stability.
+
+Application Goal: A simple Habit Tracker (Add, Delete, and Mark Complete/Incomplete habits).
+
+1. Android Core (Kotlin & Compose):
+UI/UX: Use Jetpack Compose for the entire UI, ensuring a clean, responsive layout suitable for mobile devices.
+Data Model: Define a simple `Habit` data class.
+Data Persistence: Implement Room to handle persistence. Include the `Habit` Entity, `HabitDao` (with full CRUD operations: insert, update, delete, get all), and the `AppDatabase`. Use Kotlin Coroutines and Flow for clean data handling in the ViewModel.
+Code Quality: Use modern Kotlin best practices (e.g., `val` vs `var`, concise lambda functions, and sealed interfaces/classes where appropriate).
+
+2. Flutter Integration:
+Create a standalone Flutter Module (named `flutter_module`) that contains a single screen displaying a motivational quote.
+Implement a Button in the main Android Compose UI that launches this Flutter module using an Android Intent. Provide the necessary setup code for both the Android side (Intent call) and the Flutter side (to be launched as an Activity).
+
+3. Testing:
+Provide a dedicated unit test file using JUnit and Mockito for the `HabitDao` to demonstrate reliable persistence testing (e.g., verifying insert and read operations).
+
+4. Stretch Goal (Firebase):
+Integrate the Firebase Firestore SDK. Add a function to the Android ViewModel to save the user's current list of habits to a remote Firestore collection named `habits_sync`. Assume standard Firebase initialization is handled.
+
+Output Requirement: The code must be provided in separate, runnable files for the Android (Kotlin) components, the Flutter (Dart) module, and the Kotlin Test file. Every file must be extensively commented to explain the key concepts (e.g., Compose state, Room setup, Intent parameters, Mockito usage).

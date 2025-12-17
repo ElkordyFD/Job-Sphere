@@ -1,8 +1,5 @@
 package com.jobsphere.core;
 
-/**
- * Applicant user role.
- */
 public class Applicant extends User {
     private String resumePath;
     private java.util.List<String> savedJobIds;

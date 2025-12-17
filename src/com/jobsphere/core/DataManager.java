@@ -1,22 +1,31 @@
 package com.jobsphere.core;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Singleton Pattern: Manages global application data (Users, Jobs).
+ * Singleton Pattern: Central access point for all repositories and services.
+ * Now delegates to specialized repositories (SRP compliant).
+ * Acts as a Facade for the data layer.
  */
 public class DataManager {
     private static DataManager instance;
 
-    private List<User> users;
-    private List<Job> jobs;
-    private User currentUser;
+    // Repositories (Dependency Inversion - depends on interfaces)
+    private final UserRepository userRepository;
+    private final JobRepository jobRepository;
+    private final ApplicationRepository applicationRepository;
+
+    // Services
+    private final SessionManager sessionManager;
+    private final NotificationService notificationService;
 
     private DataManager() {
-        users = new ArrayList<>();
-        jobs = new ArrayList<>();
+        // Default implementations (can be swapped for testing or different storage)
+        this.userRepository = new InMemoryUserRepository();
+        this.jobRepository = new InMemoryJobRepository();
+        this.applicationRepository = new InMemoryApplicationRepository();
+        this.sessionManager = new SessionManager();
+        this.notificationService = new NotificationService();
     }
 
     public static synchronized DataManager getInstance() {
@@ -26,88 +35,76 @@ public class DataManager {
         return instance;
     }
 
-    // User Management
+    // ============ Repository Accessors ============
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    public JobRepository getJobRepository() {
+        return jobRepository;
+    }
+
+    public ApplicationRepository getApplicationRepository() {
+        return applicationRepository;
+    }
+
+    // ============ Service Accessors ============
+    public SessionManager getSessionManager() {
+        return sessionManager;
+    }
+
+    public NotificationService getNotificationService() {
+        return notificationService;
+    }
+
+    // ============ Convenience Methods (Facade) ============
+    // These delegate to repositories for backward compatibility
+
     public void registerUser(User user) {
-        users.add(user);
+        userRepository.add(user);
     }
 
     public User login(String username, String password) {
-        Optional<User> user = users.stream()
-                .filter(u -> u.getUsername().equals(username) && u.checkPassword(password))
-                .findFirst();
-
-        if (user.isPresent()) {
-            currentUser = user.get();
-            return currentUser;
-        }
-        return null;
+        return sessionManager.login(userRepository, username, password);
     }
 
     public void logout() {
-        currentUser = null;
+        sessionManager.logout();
     }
 
     public User getCurrentUser() {
-        return currentUser;
+        return sessionManager.getCurrentUser();
     }
 
-    // Job Management
     public void addJob(Job job) {
-        jobs.add(job);
+        jobRepository.add(job);
     }
 
     public List<Job> getJobs() {
-        return jobs;
+        return jobRepository.findAll();
     }
 
     public List<Job> getJobsByCompany(String companyUsername) {
-        List<Job> companyJobs = new ArrayList<>();
-        for (Job j : jobs) {
-            if (j.getCompanyUsername().equals(companyUsername)) {
-                companyJobs.add(j);
-            }
-        }
-        return companyJobs;
+        return jobRepository.findByCompany(companyUsername);
     }
 
     public void removeJob(String jobId) {
-        jobs.removeIf(j -> j.getId().equals(jobId));
+        jobRepository.remove(jobId);
     }
 
     public List<User> getAllApplicants() {
-        List<User> applicants = new ArrayList<>();
-        for (User u : users) {
-            if (u.getRole().equals("APPLICANT")) {
-                applicants.add(u);
-            }
-        }
-        return applicants;
+        return userRepository.findByRole("APPLICANT");
     }
 
-    // Application Management
-    private List<JobApplication> applications = new ArrayList<>();
-
     public void addApplication(JobApplication app) {
-        applications.add(app);
+        applicationRepository.add(app);
     }
 
     public List<JobApplication> getApplicationsForJob(String jobId) {
-        List<JobApplication> jobApps = new ArrayList<>();
-        for (JobApplication app : applications) {
-            if (app.getJob().getId().equals(jobId)) {
-                jobApps.add(app);
-            }
-        }
-        return jobApps;
+        return applicationRepository.findByJobId(jobId);
     }
 
     public List<JobApplication> getApplicationsByUser(String username) {
-        List<JobApplication> userApps = new ArrayList<>();
-        for (JobApplication app : applications) {
-            if (app.getApplicantUsername().equals(username)) {
-                userApps.add(app);
-            }
-        }
-        return userApps;
+        return applicationRepository.findByUsername(username);
     }
 }

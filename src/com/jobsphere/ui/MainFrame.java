@@ -34,7 +34,30 @@ public class MainFrame extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
+            try {
+                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+                // Set a modern global font
+                setGlobalFont(new javax.swing.plaf.FontUIResource("Segoe UI", Font.PLAIN, 14));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             new MainFrame().setVisible(true);
         });
+    }
+
+    private static void setGlobalFont(javax.swing.plaf.FontUIResource font) {
+        java.util.Enumeration<Object> keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource) {
+                UIManager.put(key, font);
+            }
+        }
     }
 }

@@ -1,8 +1,5 @@
 package com.jobsphere.core;
 
-/**
- * Company user role.
- */
 public class Company extends User {
     private String companyName;
 

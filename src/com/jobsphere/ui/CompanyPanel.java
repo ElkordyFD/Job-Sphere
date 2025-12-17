@@ -22,19 +22,26 @@ public class CompanyPanel extends JPanel {
         setLayout(new BorderLayout());
 
         // Header
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        header.setBackground(new Color(70, 130, 180));
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        header.setBackground(new Color(70, 130, 180)); // Steel Blue
+
         JLabel title = new JLabel("Company Dashboard");
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+
         JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setBackground(new Color(255, 255, 255));
+        logoutBtn.setForeground(new Color(70, 130, 180));
+        logoutBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        logoutBtn.setFocusPainted(false);
+        logoutBtn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
         logoutBtn.addActionListener(e -> {
             DataManager.getInstance().logout();
             mainFrame.showCard("LOGIN");
         });
 
         header.add(title);
-        header.add(Box.createHorizontalStrut(400));
+        header.add(Box.createHorizontalStrut(350));
         header.add(logoutBtn);
         add(header, BorderLayout.NORTH);
 
@@ -104,10 +111,16 @@ public class CompanyPanel extends JPanel {
                     .setCompanyUsername(user.getUsername())
                     .build();
             DataManager.getInstance().addJob(job);
+
+            // Notify Observers
+            DataManager.getInstance().getNotificationService().notifyObservers(
+                    "New Job Posted: " + job.getTitle() + " by " + user.getUsername());
+
             JOptionPane.showMessageDialog(this, "Job Posted!");
             titleField.setText("");
             descArea.setText("");
             reqArea.setText("");
+            refreshMyJobs(); // Auto-refresh Manage Jobs tab
             refreshApps(); // Refresh tables if needed
         });
 
@@ -128,6 +141,7 @@ public class CompanyPanel extends JPanel {
         String[] cols = { "Job Title", "Applicant", "Status" };
         appsModel = new DefaultTableModel(cols, 0);
         appsTable = new JTable(appsModel);
+        styleTable(appsTable);
         panel.add(new JScrollPane(appsTable), BorderLayout.CENTER);
 
         JButton nextStateBtn = new JButton("Move to Next Stage");
@@ -155,9 +169,15 @@ public class CompanyPanel extends JPanel {
         refreshBtn.addActionListener(e -> refreshMyJobs());
         panel.add(refreshBtn, BorderLayout.NORTH);
 
-        String[] cols = { "ID", "Title", "Status" };
-        jobsModel = new DefaultTableModel(cols, 0);
+        String[] cols = { "Title", "Status" };
+        jobsModel = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
         myJobsTable = new JTable(jobsModel);
+        styleTable(myJobsTable);
         panel.add(new JScrollPane(myJobsTable), BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel();
@@ -193,6 +213,7 @@ public class CompanyPanel extends JPanel {
         String[] cols = { "Username", "Email" };
         candidatesModel = new DefaultTableModel(cols, 0);
         candidatesTable = new JTable(candidatesModel);
+        styleTable(candidatesTable);
         panel.add(new JScrollPane(candidatesTable), BorderLayout.CENTER);
 
         JButton viewProfileBtn = new JButton("View Candidate Profile");
@@ -278,7 +299,7 @@ public class CompanyPanel extends JPanel {
         User user = DataManager.getInstance().getCurrentUser();
         List<Job> myJobs = DataManager.getInstance().getJobsByCompany(user.getUsername());
         for (Job j : myJobs) {
-            jobsModel.addRow(new Object[] { j.getId(), j.getTitle(), j.isActive() ? "Active" : "Paused" });
+            jobsModel.addRow(new Object[] { j.getTitle(), j.isActive() ? "Active" : "Paused" });
         }
     }
 
@@ -286,8 +307,8 @@ public class CompanyPanel extends JPanel {
         int row = myJobsTable.getSelectedRow();
         if (row == -1)
             return;
-        String jobId = (String) jobsModel.getValueAt(row, 0);
-        Job job = findJob(jobId);
+        String jobTitle = (String) jobsModel.getValueAt(row, 0);
+        Job job = findJobByTitle(jobTitle);
         if (job != null) {
             String newTitle = JOptionPane.showInputDialog(this, "Enter new title:", job.getTitle());
             if (newTitle != null && !newTitle.isEmpty()) {
@@ -301,8 +322,8 @@ public class CompanyPanel extends JPanel {
         int row = myJobsTable.getSelectedRow();
         if (row == -1)
             return;
-        String jobId = (String) jobsModel.getValueAt(row, 0);
-        Job job = findJob(jobId);
+        String jobTitle = (String) jobsModel.getValueAt(row, 0);
+        Job job = findJobByTitle(jobTitle);
         if (job != null) {
             job.setActive(!job.isActive());
             refreshMyJobs();
@@ -313,17 +334,19 @@ public class CompanyPanel extends JPanel {
         int row = myJobsTable.getSelectedRow();
         if (row == -1)
             return;
-        String jobId = (String) jobsModel.getValueAt(row, 0);
+        String jobTitle = (String) jobsModel.getValueAt(row, 0);
+        Job job = findJobByTitle(jobTitle);
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure?", "Remove Job", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            DataManager.getInstance().removeJob(jobId);
+        if (confirm == JOptionPane.YES_OPTION && job != null) {
+            DataManager.getInstance().removeJob(job.getId());
             refreshMyJobs();
         }
     }
 
-    private Job findJob(String jobId) {
-        return DataManager.getInstance().getJobs().stream()
-                .filter(j -> j.getId().equals(jobId))
+    private Job findJobByTitle(String title) {
+        User user = DataManager.getInstance().getCurrentUser();
+        return DataManager.getInstance().getJobsByCompany(user.getUsername()).stream()
+                .filter(j -> j.getTitle().equals(title))
                 .findFirst().orElse(null);
     }
 
@@ -361,5 +384,16 @@ public class CompanyPanel extends JPanel {
                     "Resume Path: " + app.getResumePath();
             JOptionPane.showMessageDialog(this, info, "Candidate Profile", JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    private void styleTable(JTable table) {
+        table.setRowHeight(30);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.setSelectionBackground(new Color(173, 216, 230)); // Light Blue
+        table.setSelectionForeground(Color.BLACK);
     }
 }

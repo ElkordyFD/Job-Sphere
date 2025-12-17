@@ -1,8 +1,5 @@
 package com.jobsphere.core;
 
-/**
- * Represents a Job Listing.
- */
 public class Job {
     private String id;
     private String title;

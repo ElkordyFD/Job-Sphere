@@ -1,0 +1,215 @@
+```mermaid
+classDiagram
+    %% ============ CORE PACKAGE ============
+    namespace Core {
+        %% Domain Models
+        class User {
+            <<abstract>>
+            #String username
+            #String password
+            #String email
+            +getRole() String
+            +checkPassword(String) boolean
+        }
+
+        class Applicant {
+            -String resumePath
+            -List~String~ savedJobIds
+            +saveJob(String)
+            +isJobSaved(String) boolean
+        }
+
+        class Company {
+            -String companyName
+        }
+
+        class Job {
+            -String id
+            -String title
+            -String description
+            -String companyUsername
+            -String requirements
+            -boolean isActive
+        }
+
+        class JobApplication {
+            -String applicantUsername
+            -String resumePath
+            -ApplicationState state
+            +next()
+            +getStatus() String
+        }
+
+        %% State Pattern
+        class ApplicationState {
+            <<interface>>
+            +next(JobApplication)
+            +getStatusName() String
+        }
+        class AppliedState
+        class ReviewedState
+        class AcceptedState
+        class RejectedState
+
+        %% Repository Interfaces (DIP)
+        class UserRepository {
+            <<interface>>
+            +add(User)
+            +findByUsername(String) User
+            +findAll() List~User~
+            +findByRole(String) List~User~
+        }
+
+        class JobRepository {
+            <<interface>>
+            +add(Job)
+            +remove(String)
+            +findById(String) Job
+            +findAll() List~Job~
+            +findByCompany(String) List~Job~
+        }
+
+        class ApplicationRepository {
+            <<interface>>
+            +add(JobApplication)
+            +findByJobId(String) List~JobApplication~
+            +findByUsername(String) List~JobApplication~
+        }
+
+        %% Repository Implementations
+        class InMemoryUserRepository
+        class InMemoryJobRepository
+        class InMemoryApplicationRepository
+
+        %% Services (SRP)
+        class SessionManager {
+            -User currentUser
+            +login(UserRepository, String, String) User
+            +logout()
+            +getCurrentUser() User
+        }
+
+        class JobService {
+            +postJob(String, String, String, String) Job
+            +getActiveJobs() List~Job~
+            +toggleJobStatus(Job)
+            +removeJob(String)
+        }
+
+        class ApplicationService {
+            +submitApplication(Applicant, Job, String) JobApplication
+            +advanceApplication(JobApplication)
+        }
+
+        %% Facade
+        class DataManager {
+            <<singleton>>
+            -UserRepository userRepository
+            -JobRepository jobRepository
+            -ApplicationRepository applicationRepository
+            -SessionManager sessionManager
+            -NotificationService notificationService
+            +getInstance() DataManager
+            +getUserRepository() UserRepository
+            +getJobRepository() JobRepository
+            +getSessionManager() SessionManager
+        }
+
+        %% Strategy Pattern
+        class SearchStrategy {
+            <<interface>>
+            +search(List~Job~, String) List~Job~
+        }
+        class KeywordSearchStrategy
+
+        %% Factory Pattern (OCP)
+        class UserFactory {
+            -Map~String,UserCreator~ creators
+            +registerType(String, UserCreator)$
+            +createUser(String, String, String, String)$ User
+        }
+
+        %% Builder Pattern
+        class JobBuilder {
+            +setTitle(String) JobBuilder
+            +setDescription(String) JobBuilder
+            +build() Job
+        }
+
+        %% Observer Pattern
+        class Observer {
+            <<interface>>
+            +update(String)
+        }
+        class NotificationService {
+            -List~Observer~ observers
+            +addObserver(Observer)
+            +notifyObservers(String)
+        }
+    }
+
+    %% ============ UI PACKAGE ============
+    namespace UI {
+        class MainFrame {
+            -CardLayout cardLayout
+            +showCard(String)
+            +addCard(JPanel, String)
+        }
+
+        class LoginPanel {
+            +handleLogin()
+            +handleRegister()
+        }
+
+        class ApplicantPanel {
+            <<Observer>>
+            -int notificationCount
+            +refreshJobList()
+            +applyToJob()
+            +update(String)
+        }
+
+        class CompanyPanel {
+            +refreshMyJobs()
+            +refreshApps()
+            +moveState()
+        }
+    }
+
+    %% ============ RELATIONSHIPS ============
+    %% Inheritance
+    User <|-- Applicant
+    User <|-- Company
+    ApplicationState <|.. AppliedState
+    ApplicationState <|.. ReviewedState
+    ApplicationState <|.. AcceptedState
+    ApplicationState <|.. RejectedState
+    UserRepository <|.. InMemoryUserRepository
+    JobRepository <|.. InMemoryJobRepository
+    ApplicationRepository <|.. InMemoryApplicationRepository
+    SearchStrategy <|.. KeywordSearchStrategy
+    Observer <|.. ApplicantPanel
+
+    %% Associations
+    JobApplication --> Job
+    JobApplication --> ApplicationState
+    DataManager o-- UserRepository
+    DataManager o-- JobRepository
+    DataManager o-- ApplicationRepository
+    DataManager o-- SessionManager
+    DataManager o-- NotificationService
+    NotificationService o-- Observer
+    JobService --> JobRepository
+    JobService --> NotificationService
+    ApplicationService --> ApplicationRepository
+
+    %% Dependencies
+    LoginPanel ..> UserFactory : Uses
+    LoginPanel ..> DataManager : Uses
+    ApplicantPanel ..> DataManager : Uses
+    ApplicantPanel ..> SearchStrategy : Uses
+    CompanyPanel ..> DataManager : Uses
+    MainFrame *-- LoginPanel
+    MainFrame *-- ApplicantPanel
+    MainFrame *-- CompanyPanel
+```

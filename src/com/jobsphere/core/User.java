@@ -1,8 +1,6 @@
 package com.jobsphere.core;
 
-/**
- * Abstract User class representing a generic user in the system.
- */
+
 public abstract class User {
     protected String username;
     protected String password;

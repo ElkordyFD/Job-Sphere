@@ -13,68 +13,104 @@ public class LoginPanel extends JPanel {
 
     public LoginPanel(MainFrame frame) {
         this.mainFrame = frame;
-        setLayout(new GridBagLayout());
-        setBackground(new Color(240, 248, 255)); // Alice Blue
+        setLayout(new GridBagLayout()); // Center the card
+        setBackground(new Color(225, 240, 255)); // Soft Background
+
+        // Card Panel
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(30, 40, 30, 40) // Padding inside card
+        ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(10, 5, 10, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Title
-        JLabel titleLabel = new JLabel("Job Sphere Login");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel titleLabel = new JLabel("Job Sphere");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        titleLabel.setForeground(new Color(50, 50, 50));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        add(titleLabel, gbc);
+        card.add(titleLabel, gbc);
+
+        // Subtitle
+        JLabel subLabel = new JLabel("Login to your account");
+        subLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subLabel.setForeground(Color.GRAY);
+        subLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 5, 20, 5);
+        card.add(subLabel, gbc);
+
+        // Reset insets
+        gbc.insets = new Insets(5, 5, 5, 5);
 
         // Username
+        gbc.gridy = 2;
         gbc.gridwidth = 1;
-        gbc.gridy = 1;
-        add(new JLabel("Username:"), gbc);
-        userField = new JTextField(15);
+        card.add(new JLabel("Username:"), gbc);
+
+        userField = new JTextField(20);
         gbc.gridx = 1;
-        add(userField, gbc);
+        card.add(userField, gbc);
 
         // Password
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        add(new JLabel("Password:"), gbc);
-        passField = new JPasswordField(15);
-        gbc.gridx = 1;
-        add(passField, gbc);
-
-        // Role (for Registration)
-        gbc.gridx = 0;
         gbc.gridy = 3;
-        add(new JLabel("Role (Register only):"), gbc);
+        card.add(new JLabel("Password:"), gbc);
+
+        passField = new JPasswordField(20);
+        gbc.gridx = 1;
+        card.add(passField, gbc);
+
+        // Role
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        card.add(new JLabel("Role:"), gbc);
+
         roleCombo = new JComboBox<>(new String[] { "APPLICANT", "COMPANY" });
         gbc.gridx = 1;
-        add(roleCombo, gbc);
+        card.add(roleCombo, gbc);
 
         // Buttons
-        JPanel btnPanel = new JPanel();
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         btnPanel.setOpaque(false);
+
         JButton loginBtn = new JButton("Login");
         JButton registerBtn = new JButton("Register");
 
-        // Styling Buttons
-        loginBtn.setBackground(new Color(100, 149, 237));
-        loginBtn.setForeground(Color.WHITE);
-        registerBtn.setBackground(new Color(60, 179, 113));
-        registerBtn.setForeground(Color.WHITE);
+        styleButton(loginBtn, new Color(70, 130, 180));
+        styleButton(registerBtn, new Color(100, 100, 100));
 
         btnPanel.add(loginBtn);
         btnPanel.add(registerBtn);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
-        add(btnPanel, gbc);
+        gbc.insets = new Insets(20, 5, 5, 5);
+        card.add(btnPanel, gbc);
 
         // Actions
         loginBtn.addActionListener(e -> handleLogin());
         registerBtn.addActionListener(e -> handleRegister());
+
+        // Add Card to Main Panel
+        add(card);
+    }
+
+    private void styleButton(JButton btn, Color bg) {
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
     }
 
     private void handleLogin() {
@@ -83,7 +119,7 @@ public class LoginPanel extends JPanel {
 
         User loggedInUser = DataManager.getInstance().login(user, pass);
         if (loggedInUser != null) {
-            JOptionPane.showMessageDialog(this, "Welcome " + loggedInUser.getUsername());
+            // Keep it silent or simple welcome
             if (loggedInUser instanceof Applicant) {
                 mainFrame.addCard(new ApplicantPanel(mainFrame), "APPLICANT");
                 mainFrame.showCard("APPLICANT");

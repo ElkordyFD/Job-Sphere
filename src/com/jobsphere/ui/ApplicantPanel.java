@@ -7,7 +7,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class ApplicantPanel extends JPanel {
+public class ApplicantPanel extends JPanel implements Observer {
     private MainFrame mainFrame;
     private JTable jobTable;
     private DefaultTableModel tableModel;
@@ -18,29 +18,50 @@ public class ApplicantPanel extends JPanel {
     private JButton saveBtn;
     private static final String RESUME_DIR = "resumes";
 
+    // Notification State
+    private JButton notificationBtn;
+    private int notificationCount = 0;
+    private java.util.List<String> notifications = new java.util.ArrayList<>();
+
     public ApplicantPanel(MainFrame frame) {
         this.mainFrame = frame;
         this.searchStrategy = new KeywordSearchStrategy();
+
+        // Register for Notifications
+        DataManager.getInstance().getNotificationService().addObserver(this);
+
         setLayout(new BorderLayout());
 
         // Header
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        header.setBackground(new Color(100, 149, 237));
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        header.setBackground(new Color(70, 130, 180)); // Steel Blue
+
         JLabel title = new JLabel("Applicant Dashboard");
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Arial", Font.BOLD, 18));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
 
         JButton profileBtn = new JButton("Profile");
+        styleHeaderButton(profileBtn);
         profileBtn.addActionListener(e -> showProfile());
 
         JButton logoutBtn = new JButton("Logout");
+        styleHeaderButton(logoutBtn);
         logoutBtn.addActionListener(e -> {
             DataManager.getInstance().logout();
             mainFrame.showCard("LOGIN");
         });
 
+        // Notification Button
+        notificationBtn = new JButton("Notifications (0)");
+        notificationBtn.setBackground(new Color(255, 193, 7)); // Amber/Gold
+        notificationBtn.setForeground(Color.BLACK);
+        notificationBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        notificationBtn.setFocusPainted(false);
+        notificationBtn.addActionListener(e -> showNotifications());
+
         header.add(title);
-        header.add(Box.createHorizontalStrut(300));
+        header.add(Box.createHorizontalStrut(200)); // Adjusted spacing
+        header.add(notificationBtn);
         header.add(profileBtn);
         header.add(logoutBtn);
         add(header, BorderLayout.NORTH);
@@ -64,7 +85,7 @@ public class ApplicantPanel extends JPanel {
         centerPanel.add(searchPanel, BorderLayout.NORTH);
 
         // Table
-        String[] cols = { "ID", "Title", "Company", "Description" };
+        String[] cols = { "ID", "Title", "Company", "Description", "Requirements" };
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -72,6 +93,7 @@ public class ApplicantPanel extends JPanel {
             }
         };
         jobTable = new JTable(tableModel);
+        styleTable(jobTable);
         jobTable.getSelectionModel().addListSelectionListener(e -> updateButtons());
         centerPanel.add(new JScrollPane(jobTable), BorderLayout.CENTER);
 
@@ -125,7 +147,8 @@ public class ApplicantPanel extends JPanel {
                 if (showSaved && !applicant.isJobSaved(j.getId())) {
                     continue;
                 }
-                tableModel.addRow(new Object[] { j.getId(), j.getTitle(), j.getCompanyUsername(), j.getDescription() });
+                tableModel.addRow(new Object[] { j.getId(), j.getTitle(), j.getCompanyUsername(), j.getDescription(),
+                        j.getRequirements() });
             }
         }
     }
@@ -251,6 +274,63 @@ public class ApplicantPanel extends JPanel {
             JobApplication app = new JobApplication(currentUser.getUsername(), selectedJob, resumeToUse);
             DataManager.getInstance().addApplication(app);
             JOptionPane.showMessageDialog(this, "Applied successfully!");
+        }
+    }
+
+    private void styleTable(JTable table) {
+        table.setRowHeight(30);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.setSelectionBackground(new Color(100, 149, 237)); // Cornflower Blue
+        table.setSelectionForeground(Color.WHITE);
+
+        // Hide ID Column (Index 0)
+        table.getColumnModel().getColumn(0).setMinWidth(0);
+        table.getColumnModel().getColumn(0).setMaxWidth(0);
+        table.getColumnModel().getColumn(0).setWidth(0);
+    }
+
+    private void styleHeaderButton(JButton btn) {
+        btn.setBackground(new Color(255, 255, 255));
+        btn.setForeground(new Color(70, 130, 180));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+    }
+
+    @Override
+    public void update(String message) {
+        notificationCount++;
+        notifications.add(message);
+        notificationBtn.setText("Notifications (" + notificationCount + ")");
+
+        // Refresh valid UI components
+        if (showSavedBtn != null && showSavedBtn.isVisible()) {
+            refreshJobList();
+            // Optional to also show popup, but let's stick to the Bell as requested
+            // JOptionPane.showMessageDialog(this, message, "New Notification",
+            // JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void showNotifications() {
+        if (notifications.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No new notifications.");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (String msg : notifications) {
+                sb.append("- ").append(msg).append("\n");
+            }
+            JOptionPane.showMessageDialog(this, sb.toString(), "Notifications", JOptionPane.INFORMATION_MESSAGE);
+
+            // Reset Count
+            notificationCount = 0;
+            notificationBtn.setText("Notifications (0)");
+            // clear list if you want, or just keep history. Let's keep history but reset
+            // count (unread).
         }
     }
 }
