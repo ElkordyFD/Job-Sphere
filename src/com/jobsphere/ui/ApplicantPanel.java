@@ -18,17 +18,9 @@ public class ApplicantPanel extends JPanel {
     private JButton saveBtn;
     private static final String RESUME_DIR = "resumes";
 
-    // Notification State
-    private JButton notificationBtn;
-    private int notificationCount = 0;
-    private java.util.List<String> notifications = new java.util.ArrayList<>();
-
     public ApplicantPanel(MainFrame frame) {
         this.mainFrame = frame;
         this.searchStrategy = new KeywordSearchStrategy();
-
-        // Register for Notifications using callback
-        DataManager.getInstance().getNotificationService().addListener(this::onNotification);
 
         setLayout(new BorderLayout());
 
@@ -51,17 +43,8 @@ public class ApplicantPanel extends JPanel {
             mainFrame.showCard("LOGIN");
         });
 
-        // Notification Button
-        notificationBtn = new JButton("Notifications (0)");
-        notificationBtn.setBackground(new Color(255, 193, 7)); // Amber/Gold
-        notificationBtn.setForeground(Color.BLACK);
-        notificationBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        notificationBtn.setFocusPainted(false);
-        notificationBtn.addActionListener(e -> showNotifications());
-
         header.add(title);
-        header.add(Box.createHorizontalStrut(200)); // Adjusted spacing
-        header.add(notificationBtn);
+        header.add(Box.createHorizontalStrut(300));
         header.add(profileBtn);
         header.add(logoutBtn);
         add(header, BorderLayout.NORTH);
@@ -116,20 +99,6 @@ public class ApplicantPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
 
         refreshJobList();
-    }
-
-    /**
-     * Callback method for receiving notifications.
-     */
-    private void onNotification(String message) {
-        notificationCount++;
-        notifications.add(message);
-        notificationBtn.setText("Notifications (" + notificationCount + ")");
-
-        // Refresh valid UI components
-        if (showSavedBtn != null && showSavedBtn.isVisible()) {
-            refreshJobList();
-        }
     }
 
     private void updateButtons() {
@@ -249,7 +218,6 @@ public class ApplicantPanel extends JPanel {
                 JFileChooser fc = new JFileChooser();
                 if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     resumeToUse = fc.getSelectedFile().getAbsolutePath();
-                    // Optional: ask to save as default
                 } else {
                     return; // Cancelled
                 }
@@ -313,21 +281,5 @@ public class ApplicantPanel extends JPanel {
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setFocusPainted(false);
         btn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
-    }
-
-    private void showNotifications() {
-        if (notifications.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No new notifications.");
-        } else {
-            StringBuilder sb = new StringBuilder();
-            for (String msg : notifications) {
-                sb.append("- ").append(msg).append("\n");
-            }
-            JOptionPane.showMessageDialog(this, sb.toString(), "Notifications", JOptionPane.INFORMATION_MESSAGE);
-
-            // Reset Count
-            notificationCount = 0;
-            notificationBtn.setText("Notifications (0)");
-        }
     }
 }

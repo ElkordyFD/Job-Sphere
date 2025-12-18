@@ -56,7 +56,6 @@ classDiagram
             <<interface>>
             +add(User)
             +findByUsername(String) User
-            +findAll() List~User~
             +findByRole(String) List~User~
         }
 
@@ -64,7 +63,6 @@ classDiagram
             <<interface>>
             +add(Job)
             +remove(String)
-            +findById(String) Job
             +findAll() List~Job~
             +findByCompany(String) List~Job~
         }
@@ -81,7 +79,7 @@ classDiagram
         class InMemoryJobRepository
         class InMemoryApplicationRepository
 
-        %% Services (SRP)
+        %% Services
         class SessionManager {
             -User currentUser
             +login(UserRepository, String, String) User
@@ -103,21 +101,7 @@ classDiagram
 
         class LoginProxy {
             -LoginService realLoginService
-            -int failedAttempts
-            -long lockoutEndTime
             +login(String, String) User
-            -validateInput(String, String) boolean
-            -validateUsernameFormat(String) boolean
-            -isLockedOut() boolean
-        }
-
-        %% Notification Service (Simple callback-based)
-        class NotificationService {
-            -List~String~ notifications
-            -List~Consumer~ listeners
-            +addListener(Consumer)
-            +sendNotification(String)
-            +getNotifications() List~String~
         }
 
         %% Facade
@@ -127,7 +111,6 @@ classDiagram
             -JobRepository jobRepository
             -ApplicationRepository applicationRepository
             -SessionManager sessionManager
-            -NotificationService notificationService
             -LoginService loginService
             +getInstance() DataManager
             +login(String, String) User
@@ -141,7 +124,7 @@ classDiagram
         }
         class KeywordSearchStrategy
 
-        %% Factory Pattern (Simple)
+        %% Factory Pattern
         class UserFactory {
             +createUser(String, String, String, String)$ User
         }
@@ -168,10 +151,8 @@ classDiagram
         }
 
         class ApplicantPanel {
-            -int notificationCount
             +refreshJobList()
             +applyToJob()
-            -onNotification(String)
         }
 
         class CompanyPanel {
@@ -206,7 +187,6 @@ classDiagram
     DataManager o-- JobRepository
     DataManager o-- ApplicationRepository
     DataManager o-- SessionManager
-    DataManager o-- NotificationService
     DataManager o-- LoginService
 
     %% Dependencies

@@ -112,10 +112,6 @@ public class CompanyPanel extends JPanel {
                     .build();
             DataManager.getInstance().addJob(job);
 
-            // Send Notification
-            DataManager.getInstance().getNotificationService().sendNotification(
-                    "New Job Posted: " + job.getTitle() + " by " + user.getUsername());
-
             JOptionPane.showMessageDialog(this, "Job Posted!");
             titleField.setText("");
             descArea.setText("");

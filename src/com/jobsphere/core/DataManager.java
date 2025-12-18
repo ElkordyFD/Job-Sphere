@@ -10,17 +10,14 @@ public class DataManager {
     private final ApplicationRepository applicationRepository;
 
     private final SessionManager sessionManager;
-    private final NotificationService notificationService;
-    private final LoginService loginService; // Proxy Pattern
+    private final LoginService loginService;
 
     private DataManager() {
         this.userRepository = new InMemoryUserRepository();
         this.jobRepository = new InMemoryJobRepository();
         this.applicationRepository = new InMemoryApplicationRepository();
         this.sessionManager = new SessionManager();
-        this.notificationService = new NotificationService();
 
-        // Proxy Pattern: LoginProxy wraps the RealLoginService
         RealLoginService realLoginService = new RealLoginService(userRepository, sessionManager);
         this.loginService = new LoginProxy(realLoginService);
     }
@@ -30,10 +27,6 @@ public class DataManager {
             instance = new DataManager();
         }
         return instance;
-    }
-
-    public NotificationService getNotificationService() {
-        return notificationService;
     }
 
     public void registerUser(User user) {
