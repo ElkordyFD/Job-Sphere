@@ -50,14 +50,6 @@ public class Job {
         this.title = title;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
-    }
-
     @Override
     public String toString() {
         return title + " at " + companyUsername;

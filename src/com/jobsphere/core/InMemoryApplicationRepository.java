@@ -3,10 +3,6 @@ package com.jobsphere.core;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * In-memory implementation of ApplicationRepository.
- * Single Responsibility: Only handles application data storage.
- */
 public class InMemoryApplicationRepository implements ApplicationRepository {
     private final List<JobApplication> applications = new ArrayList<>();
 
@@ -37,8 +33,4 @@ public class InMemoryApplicationRepository implements ApplicationRepository {
         return result;
     }
 
-    @Override
-    public List<JobApplication> findAll() {
-        return new ArrayList<>(applications);
-    }
 }

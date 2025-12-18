@@ -2,24 +2,45 @@ package com.jobsphere.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
- * Observer Pattern: Subject that notifies observers.
+ * Simple NotificationService using callback approach instead of Observer
+ * pattern.
+ * Notifications are stored and can be retrieved by UI components.
  */
 public class NotificationService {
-    private List<Observer> observers = new ArrayList<>();
+    private List<String> notifications = new ArrayList<>();
+    private List<Consumer<String>> listeners = new ArrayList<>();
 
-    public void addObserver(Observer observer) {
-        observers.add(observer);
+    /**
+     * Add a listener to receive new notifications.
+     */
+    public void addListener(Consumer<String> listener) {
+        listeners.add(listener);
     }
 
-    public void removeObserver(Observer observer) {
-        observers.remove(observer);
-    }
-
-    public void notifyObservers(String message) {
-        for (Observer observer : observers) {
-            observer.update(message);
+    /**
+     * Send a notification to all listeners.
+     */
+    public void sendNotification(String message) {
+        notifications.add(message);
+        for (Consumer<String> listener : listeners) {
+            listener.accept(message);
         }
+    }
+
+    /**
+     * Get all notifications.
+     */
+    public List<String> getNotifications() {
+        return new ArrayList<>(notifications);
+    }
+
+    /**
+     * Clear all notifications.
+     */
+    public void clearNotifications() {
+        notifications.clear();
     }
 }

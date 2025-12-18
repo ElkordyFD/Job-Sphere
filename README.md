@@ -15,7 +15,7 @@ It connects Applicants with Companies in a streamlined environment.
 3. **Builder**: `JobBuilder` constructs complex `Job` objects step-by-step.
 4. **Strategy**: `SearchStrategy` allows switching between search algorithms (e.g., Keyword Search).
 5. **State**: `ApplicationState` manages the lifecycle of a job application (Applied -> Reviewed -> Accepted/Rejected).
-6. **Observer**: `NotificationService` (structure included) for event handling.
+6. **Proxy**: `LoginProxy` adds validation, logging, and rate limiting to the login process.
 
 ## How to Run
 1. Ensure you have Java installed.

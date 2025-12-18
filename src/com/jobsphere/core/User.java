@@ -30,7 +30,4 @@ public abstract class User {
         return email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }

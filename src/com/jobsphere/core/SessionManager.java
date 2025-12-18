@@ -1,9 +1,6 @@
 package com.jobsphere.core;
 
-/**
- * Manages user session (login/logout state).
- * Single Responsibility: Only handles authentication session.
- */
+
 public class SessionManager {
     private User currentUser;
 
@@ -24,7 +21,4 @@ public class SessionManager {
         return currentUser;
     }
 
-    public boolean isLoggedIn() {
-        return currentUser != null;
-    }
 }

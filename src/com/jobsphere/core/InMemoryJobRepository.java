@@ -3,10 +3,6 @@ package com.jobsphere.core;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * In-memory implementation of JobRepository.
- * Single Responsibility: Only handles job data storage.
- */
 public class InMemoryJobRepository implements JobRepository {
     private final List<Job> jobs = new ArrayList<>();
 

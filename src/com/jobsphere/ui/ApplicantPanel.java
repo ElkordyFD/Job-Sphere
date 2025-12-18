@@ -7,7 +7,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class ApplicantPanel extends JPanel implements Observer {
+public class ApplicantPanel extends JPanel {
     private MainFrame mainFrame;
     private JTable jobTable;
     private DefaultTableModel tableModel;
@@ -27,8 +27,8 @@ public class ApplicantPanel extends JPanel implements Observer {
         this.mainFrame = frame;
         this.searchStrategy = new KeywordSearchStrategy();
 
-        // Register for Notifications
-        DataManager.getInstance().getNotificationService().addObserver(this);
+        // Register for Notifications using callback
+        DataManager.getInstance().getNotificationService().addListener(this::onNotification);
 
         setLayout(new BorderLayout());
 
@@ -116,6 +116,20 @@ public class ApplicantPanel extends JPanel implements Observer {
         add(centerPanel, BorderLayout.CENTER);
 
         refreshJobList();
+    }
+
+    /**
+     * Callback method for receiving notifications.
+     */
+    private void onNotification(String message) {
+        notificationCount++;
+        notifications.add(message);
+        notificationBtn.setText("Notifications (" + notificationCount + ")");
+
+        // Refresh valid UI components
+        if (showSavedBtn != null && showSavedBtn.isVisible()) {
+            refreshJobList();
+        }
     }
 
     private void updateButtons() {
@@ -301,21 +315,6 @@ public class ApplicantPanel extends JPanel implements Observer {
         btn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
     }
 
-    @Override
-    public void update(String message) {
-        notificationCount++;
-        notifications.add(message);
-        notificationBtn.setText("Notifications (" + notificationCount + ")");
-
-        // Refresh valid UI components
-        if (showSavedBtn != null && showSavedBtn.isVisible()) {
-            refreshJobList();
-            // Optional to also show popup, but let's stick to the Bell as requested
-            // JOptionPane.showMessageDialog(this, message, "New Notification",
-            // JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
     private void showNotifications() {
         if (notifications.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No new notifications.");
@@ -329,8 +328,6 @@ public class ApplicantPanel extends JPanel implements Observer {
             // Reset Count
             notificationCount = 0;
             notificationBtn.setText("Notifications (0)");
-            // clear list if you want, or just keep history. Let's keep history but reset
-            // count (unread).
         }
     }
 }

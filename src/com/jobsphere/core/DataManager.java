@@ -2,30 +2,27 @@ package com.jobsphere.core;
 
 import java.util.List;
 
-/**
- * Singleton Pattern: Central access point for all repositories and services.
- * Now delegates to specialized repositories (SRP compliant).
- * Acts as a Facade for the data layer.
- */
 public class DataManager {
     private static DataManager instance;
 
-    // Repositories (Dependency Inversion - depends on interfaces)
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
     private final ApplicationRepository applicationRepository;
 
-    // Services
     private final SessionManager sessionManager;
     private final NotificationService notificationService;
+    private final LoginService loginService; // Proxy Pattern
 
     private DataManager() {
-        // Default implementations (can be swapped for testing or different storage)
         this.userRepository = new InMemoryUserRepository();
         this.jobRepository = new InMemoryJobRepository();
         this.applicationRepository = new InMemoryApplicationRepository();
         this.sessionManager = new SessionManager();
         this.notificationService = new NotificationService();
+
+        // Proxy Pattern: LoginProxy wraps the RealLoginService
+        RealLoginService realLoginService = new RealLoginService(userRepository, sessionManager);
+        this.loginService = new LoginProxy(realLoginService);
     }
 
     public static synchronized DataManager getInstance() {
@@ -35,37 +32,16 @@ public class DataManager {
         return instance;
     }
 
-    // ============ Repository Accessors ============
-    public UserRepository getUserRepository() {
-        return userRepository;
-    }
-
-    public JobRepository getJobRepository() {
-        return jobRepository;
-    }
-
-    public ApplicationRepository getApplicationRepository() {
-        return applicationRepository;
-    }
-
-    // ============ Service Accessors ============
-    public SessionManager getSessionManager() {
-        return sessionManager;
-    }
-
     public NotificationService getNotificationService() {
         return notificationService;
     }
-
-    // ============ Convenience Methods (Facade) ============
-    // These delegate to repositories for backward compatibility
 
     public void registerUser(User user) {
         userRepository.add(user);
     }
 
     public User login(String username, String password) {
-        return sessionManager.login(userRepository, username, password);
+        return loginService.login(username, password);
     }
 
     public void logout() {

@@ -1,12 +1,13 @@
 package com.jobsphere.core;
+import java.util.*;
 
 public class Applicant extends User {
     private String resumePath;
-    private java.util.List<String> savedJobIds;
+    private final List<String> savedJobIds;
 
     public Applicant(String username, String password, String email) {
         super(username, password, email);
-        this.savedJobIds = new java.util.ArrayList<>();
+        this.savedJobIds = new ArrayList<>();
     }
 
     public void setResumePath(String path) {
@@ -29,10 +30,6 @@ public class Applicant extends User {
 
     public boolean isJobSaved(String jobId) {
         return savedJobIds.contains(jobId);
-    }
-
-    public java.util.List<String> getSavedJobIds() {
-        return new java.util.ArrayList<>(savedJobIds);
     }
 
     @Override

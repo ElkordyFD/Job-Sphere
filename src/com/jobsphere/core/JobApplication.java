@@ -1,9 +1,5 @@
 package com.jobsphere.core;
 
-/**
- * Represents a job application.
- * Uses State Pattern to manage status.
- */
 public class JobApplication {
     private String applicantUsername;
     private Job job;

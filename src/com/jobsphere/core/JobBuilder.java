@@ -2,9 +2,6 @@ package com.jobsphere.core;
 
 import java.util.UUID;
 
-/**
- * Builder Pattern: Constructs complex Job objects.
- */
 public class JobBuilder {
     private String title;
     private String description;
