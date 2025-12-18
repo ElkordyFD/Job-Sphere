@@ -30,6 +30,10 @@ public class JobApplication {
         state.next(this);
     }
 
+    public void reject() {
+        this.state = new RejectedState();
+    }
+
     public String getApplicantUsername() {
         return applicantUsername;
     }

@@ -145,6 +145,10 @@ public class CompanyPanel extends JPanel {
         styleButton(nextStateBtn, new Color(34, 197, 94), Color.WHITE);
         nextStateBtn.addActionListener(e -> moveState());
 
+        JButton rejectBtn = new JButton("Reject");
+        styleButton(rejectBtn, new Color(239, 68, 68), Color.WHITE);
+        rejectBtn.addActionListener(e -> rejectApplication());
+
         JButton viewResumeBtn = new JButton("View Resume");
         styleButton(viewResumeBtn, new Color(59, 130, 246), Color.WHITE);
         viewResumeBtn.addActionListener(e -> viewResume());
@@ -154,6 +158,7 @@ public class CompanyPanel extends JPanel {
         viewProfileBtn.addActionListener(e -> viewApplicantProfile());
 
         btnPanel.add(nextStateBtn);
+        btnPanel.add(rejectBtn);
         btnPanel.add(viewResumeBtn);
         btnPanel.add(viewProfileBtn);
         panel.add(btnPanel, BorderLayout.SOUTH);
@@ -305,6 +310,30 @@ public class CompanyPanel extends JPanel {
             }
         }
         refreshApps();
+    }
+
+    private void rejectApplication() {
+        int row = appsTable.getSelectedRow();
+        if (row == -1)
+            return;
+
+        String jobTitle = (String) appsModel.getValueAt(row, 0);
+        String applicant = (String) appsModel.getValueAt(row, 1);
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to reject this application?",
+                "Confirm Rejection", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicant);
+            for (JobApplication app : allApps) {
+                if (app.getJob().getTitle().equals(jobTitle)) {
+                    app.reject();
+                    break;
+                }
+            }
+            refreshApps();
+        }
     }
 
     private void viewResume() {

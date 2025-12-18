@@ -1,201 +1,137 @@
 ```mermaid
 classDiagram
-    %% ============ CORE PACKAGE ============
-    namespace Core {
-        %% Domain Models
-        class User {
-            <<abstract>>
-            #String username
-            #String password
-            #String email
-            +getRole() String
-            +checkPassword(String) boolean
-        }
-
-        class Applicant {
-            -String resumePath
-            -List~String~ savedJobIds
-            +saveJob(String)
-            +isJobSaved(String) boolean
-        }
-
-        class Company {
-            -String companyName
-        }
-
-        class Job {
-            -String id
-            -String title
-            -String description
-            -String companyUsername
-            -String requirements
-            -boolean isActive
-        }
-
-        class JobApplication {
-            -String applicantUsername
-            -String resumePath
-            -ApplicationState state
-            +next()
-            +getStatus() String
-        }
-
-        %% State Pattern
-        class ApplicationState {
-            <<interface>>
-            +next(JobApplication)
-            +getStatusName() String
-        }
-        class AppliedState
-        class ReviewedState
-        class AcceptedState
-        class RejectedState
-
-        %% Repository Interfaces (DIP)
-        class UserRepository {
-            <<interface>>
-            +add(User)
-            +findByUsername(String) User
-            +findByRole(String) List~User~
-        }
-
-        class JobRepository {
-            <<interface>>
-            +add(Job)
-            +remove(String)
-            +findAll() List~Job~
-            +findByCompany(String) List~Job~
-        }
-
-        class ApplicationRepository {
-            <<interface>>
-            +add(JobApplication)
-            +findByJobId(String) List~JobApplication~
-            +findByUsername(String) List~JobApplication~
-        }
-
-        %% Repository Implementations
-        class InMemoryUserRepository
-        class InMemoryJobRepository
-        class InMemoryApplicationRepository
-
-        %% Services
-        class SessionManager {
-            -User currentUser
-            +login(UserRepository, String, String) User
-            +logout()
-            +getCurrentUser() User
-        }
-
-        %% Proxy Pattern for Login
-        class LoginService {
-            <<interface>>
-            +login(String, String) User
-        }
-
-        class RealLoginService {
-            -UserRepository userRepository
-            -SessionManager sessionManager
-            +login(String, String) User
-        }
-
-        class LoginProxy {
-            -LoginService realLoginService
-            +login(String, String) User
-        }
-
-        %% Facade
-        class DataManager {
-            <<singleton>>
-            -UserRepository userRepository
-            -JobRepository jobRepository
-            -ApplicationRepository applicationRepository
-            -SessionManager sessionManager
-            -LoginService loginService
-            +getInstance() DataManager
-            +login(String, String) User
-            +logout()
-        }
-
-        %% Strategy Pattern
-        class SearchStrategy {
-            <<interface>>
-            +search(List~Job~, String) List~Job~
-        }
-        class KeywordSearchStrategy
-
-        %% Factory Pattern
-        class UserFactory {
-            +createUser(String, String, String, String)$ User
-        }
-
-        %% Builder Pattern
-        class JobBuilder {
-            +setTitle(String) JobBuilder
-            +setDescription(String) JobBuilder
-            +build() Job
-        }
-    }
-
-    %% ============ UI PACKAGE ============
+    %% Groups for clearer visualization
+    
+    %% ================= UI Layer =================
     namespace UI {
         class MainFrame {
-            -CardLayout cardLayout
-            +showCard(String)
-            +addCard(JPanel, String)
+            +showCard(name)
         }
-
         class LoginPanel {
             +handleLogin()
             +handleRegister()
         }
-
         class ApplicantPanel {
             +refreshJobList()
             +applyToJob()
         }
-
         class CompanyPanel {
-            +refreshMyJobs()
-            +refreshApps()
-            +moveState()
+            +postJob()
+            +rejectApplication()
         }
     }
 
-    %% ============ RELATIONSHIPS ============
-    %% Inheritance
+    %% ================= Core Logic =================
+    namespace Core {
+        class DataManager {
+            <<Singleton>>
+            +getInstance()     
+            +login()
+            +registerUser()
+        }
+        
+        class User { <<Abstract>> }
+        class Applicant
+        class Company
+        
+        class Job
+        class JobApplication {
+            +next()
+            +reject()
+        }
+    }
+
+    %% ================= Patterns =================
+    
+    %% Proxy Pattern (Authentication)
+    namespace Auth_Proxy {
+        class LoginService { <<Interface>> }
+        class LoginProxy {
+            +login()
+            +logAttempt()
+        }
+        class RealLoginService {
+            +login()
+        }
+    }
+
+    %% State Pattern (Application Status)
+    namespace Application_State {
+        class ApplicationState { <<Interface>> }
+        class AppliedState
+        class ReviewedState
+        class AcceptedState
+        class RejectedState
+    }
+
+    %% Factories & Builders
+    namespace Creator {
+        class UserFactory {
+            +createUser()
+        }
+        class JobBuilder {
+            +build()
+        }
+    }
+
+    %% Strategy Pattern (Search)
+    namespace Search_Strategy {
+        class SearchStrategy { <<Interface>> }
+        class KeywordSearchStrategy
+    }
+
+    %% Repositories (Data Access)
+    namespace Data_Access {
+        class UserRepository { <<Interface>> }
+        class JobRepository { <<Interface>> }
+        class ApplicationRepository { <<Interface>> }
+        class InMemoryUserRepository
+        class InMemoryJobRepository
+        class InMemoryApplicationRepository
+    }
+
+    %% ================= Relationships =================
+
+    %% UI Relationships
+    MainFrame *-- LoginPanel
+    MainFrame *-- ApplicantPanel
+    MainFrame *-- CompanyPanel
+    LoginPanel ..> DataManager : uses
+    ApplicantPanel ..> DataManager : uses
+    CompanyPanel ..> DataManager : uses
+    LoginPanel ..> UserFactory : uses
+
+    %% Core Inheritance & Associations
     User <|-- Applicant
     User <|-- Company
+    JobApplication --> Job
+    JobApplication --> User : applicant
+    JobApplication --> ApplicationState : has state
+
+    %% Proxy Wiring
+    LoginService <|.. RealLoginService
+    LoginService <|.. LoginProxy
+    LoginProxy o-- RealLoginService : delegates
+    DataManager o-- LoginService : uses
+
+    %% State Wiring
     ApplicationState <|.. AppliedState
     ApplicationState <|.. ReviewedState
     ApplicationState <|.. AcceptedState
     ApplicationState <|.. RejectedState
+
+    %% Repository Wiring
     UserRepository <|.. InMemoryUserRepository
     JobRepository <|.. InMemoryJobRepository
     ApplicationRepository <|.. InMemoryApplicationRepository
-    SearchStrategy <|.. KeywordSearchStrategy
-    
-    %% Proxy Pattern
-    LoginService <|.. RealLoginService
-    LoginService <|.. LoginProxy
-    LoginProxy o-- LoginService : wraps
-
-    %% Associations
-    JobApplication --> Job
-    JobApplication --> ApplicationState
     DataManager o-- UserRepository
     DataManager o-- JobRepository
     DataManager o-- ApplicationRepository
-    DataManager o-- SessionManager
-    DataManager o-- LoginService
 
-    %% Dependencies
-    LoginPanel ..> UserFactory : Uses
-    LoginPanel ..> DataManager : Uses
-    ApplicantPanel ..> DataManager : Uses
-    ApplicantPanel ..> SearchStrategy : Uses
-    CompanyPanel ..> DataManager : Uses
-    MainFrame *-- LoginPanel
-    MainFrame *-- ApplicantPanel
-    MainFrame *-- CompanyPanel
+    %% Strategy Wiring
+    SearchStrategy <|.. KeywordSearchStrategy
+    ApplicantPanel ..> SearchStrategy : uses
+
+    %% Builder Usage
+    CompanyPanel ..> JobBuilder : uses
 ```
