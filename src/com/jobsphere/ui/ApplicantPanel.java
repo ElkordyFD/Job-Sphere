@@ -23,14 +23,15 @@ public class ApplicantPanel extends JPanel {
         this.searchStrategy = new KeywordSearchStrategy();
 
         setLayout(new BorderLayout());
+        setBackground(new Color(245, 245, 250));
 
         // Header
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        header.setBackground(new Color(70, 130, 180)); // Steel Blue
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
+        header.setBackground(new Color(59, 130, 246));
 
         JLabel title = new JLabel("Applicant Dashboard");
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         JButton profileBtn = new JButton("Profile");
         styleHeaderButton(profileBtn);
@@ -49,19 +50,31 @@ public class ApplicantPanel extends JPanel {
         header.add(logoutBtn);
         add(header, BorderLayout.NORTH);
 
-        // Center - Job List
+        // Center
         JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(new Color(245, 245, 250));
 
         // Search Bar
-        JPanel searchPanel = new JPanel();
-        searchField = new JTextField(15);
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        searchPanel.setBackground(Color.WHITE);
+        
+        JLabel searchLabel = new JLabel("Keywords:");
+        searchLabel.setForeground(Color.BLACK);
+        
+        searchField = new JTextField(20);
+        
         JButton searchBtn = new JButton("Search");
-        searchBtn.addActionListener(e -> refreshJobList());
+        styleButton(searchBtn, new Color(59, 130, 246), Color.WHITE);
 
         showSavedBtn = new JToggleButton("Show Saved Only");
+        showSavedBtn.setBackground(new Color(180, 180, 180));
+        showSavedBtn.setForeground(Color.BLACK);
+        showSavedBtn.setFocusPainted(false);
         showSavedBtn.addActionListener(e -> refreshJobList());
 
-        searchPanel.add(new JLabel("Keywords:"));
+        searchBtn.addActionListener(e -> refreshJobList());
+
+        searchPanel.add(searchLabel);
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
         searchPanel.add(showSavedBtn);
@@ -78,17 +91,20 @@ public class ApplicantPanel extends JPanel {
         jobTable = new JTable(tableModel);
         styleTable(jobTable);
         jobTable.getSelectionModel().addListSelectionListener(e -> updateButtons());
-        centerPanel.add(new JScrollPane(jobTable), BorderLayout.CENTER);
+        
+        JScrollPane scrollPane = new JScrollPane(jobTable);
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Buttons Panel
-        JPanel btnPanel = new JPanel();
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        btnPanel.setBackground(Color.WHITE);
 
         JButton applyBtn = new JButton("Apply with Resume");
-        applyBtn.setBackground(new Color(60, 179, 113));
-        applyBtn.setForeground(Color.WHITE);
+        styleButton(applyBtn, new Color(34, 197, 94), Color.WHITE);
         applyBtn.addActionListener(e -> applyToJob());
 
         saveBtn = new JButton("Save Job");
+        styleButton(saveBtn, new Color(180, 180, 180), Color.BLACK);
         saveBtn.addActionListener(e -> toggleSaveJob());
         saveBtn.setEnabled(false);
 
@@ -99,6 +115,24 @@ public class ApplicantPanel extends JPanel {
         add(centerPanel, BorderLayout.CENTER);
 
         refreshJobList();
+    }
+
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void styleHeaderButton(JButton btn) {
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(new Color(59, 130, 246));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private void updateButtons() {
@@ -168,7 +202,7 @@ public class ApplicantPanel extends JPanel {
             }
         });
 
-        JPanel panel = new JPanel(new GridLayout(3, 2));
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
         panel.add(new JLabel("Email:"));
         panel.add(emailField);
         panel.add(new JLabel("Default Resume:"));
@@ -201,14 +235,13 @@ public class ApplicantPanel extends JPanel {
 
             String resumeToUse = applicant.getResumePath();
 
-            // If no default resume, or user wants to change it
             int choice = JOptionPane.YES_OPTION;
             if (resumeToUse != null && !resumeToUse.isEmpty()) {
                 choice = JOptionPane.showConfirmDialog(this,
                         "Use default resume?\n" + resumeToUse,
                         "Confirm Resume", JOptionPane.YES_NO_CANCEL_OPTION);
             } else {
-                choice = JOptionPane.NO_OPTION; // Force upload
+                choice = JOptionPane.NO_OPTION;
             }
 
             if (choice == JOptionPane.CANCEL_OPTION)
@@ -219,7 +252,7 @@ public class ApplicantPanel extends JPanel {
                 if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
                     resumeToUse = fc.getSelectedFile().getAbsolutePath();
                 } else {
-                    return; // Cancelled
+                    return;
                 }
             }
 
@@ -228,7 +261,6 @@ public class ApplicantPanel extends JPanel {
                 return;
             }
 
-            // Copy resume to local directory
             try {
                 java.io.File source = new java.io.File(resumeToUse);
                 java.io.File destDir = new java.io.File(RESUME_DIR);
@@ -260,26 +292,20 @@ public class ApplicantPanel extends JPanel {
     }
 
     private void styleTable(JTable table) {
-        table.setRowHeight(30);
+        table.setRowHeight(35);
         table.setShowVerticalLines(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.setSelectionBackground(new Color(100, 149, 237)); // Cornflower Blue
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setForeground(Color.BLACK);
+        table.setSelectionBackground(new Color(59, 130, 246));
         table.setSelectionForeground(Color.WHITE);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setForeground(Color.BLACK);
 
-        // Hide ID Column (Index 0)
+        // Hide ID Column
         table.getColumnModel().getColumn(0).setMinWidth(0);
         table.getColumnModel().getColumn(0).setMaxWidth(0);
         table.getColumnModel().getColumn(0).setWidth(0);
-    }
-
-    private void styleHeaderButton(JButton btn) {
-        btn.setBackground(new Color(255, 255, 255));
-        btn.setForeground(new Color(70, 130, 180));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
     }
 }

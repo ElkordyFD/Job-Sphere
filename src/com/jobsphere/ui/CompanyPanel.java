@@ -20,21 +20,18 @@ public class CompanyPanel extends JPanel {
     public CompanyPanel(MainFrame frame) {
         this.mainFrame = frame;
         setLayout(new BorderLayout());
+        setBackground(new Color(245, 245, 250));
 
         // Header
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        header.setBackground(new Color(70, 130, 180)); // Steel Blue
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 15));
+        header.setBackground(new Color(124, 58, 237));
 
         JLabel title = new JLabel("Company Dashboard");
         title.setForeground(Color.WHITE);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         JButton logoutBtn = new JButton("Logout");
-        logoutBtn.setBackground(new Color(255, 255, 255));
-        logoutBtn.setForeground(new Color(70, 130, 180));
-        logoutBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        logoutBtn.setFocusPainted(false);
-        logoutBtn.setBorder(BorderFactory.createEmptyBorder(6, 12, 6, 12));
+        styleHeaderButton(logoutBtn);
         logoutBtn.addActionListener(e -> {
             DataManager.getInstance().logout();
             mainFrame.showCard("LOGIN");
@@ -47,60 +44,60 @@ public class CompanyPanel extends JPanel {
 
         // Tabs
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        // Tab 1: Post Job
-        JPanel postJobPanel = createPostJobPanel();
-        tabs.addTab("Post New Job", postJobPanel);
-
-        // Tab 2: Manage Applications
-        JPanel manageAppsPanel = createManageAppsPanel();
-        tabs.addTab("Manage Applications", manageAppsPanel);
-
-        // Tab 3: Manage Jobs
-        JPanel manageJobsPanel = createManageJobsPanel();
-        tabs.addTab("Manage Jobs", manageJobsPanel);
-
-        // Tab 4: Search Candidates
-        JPanel searchCandidatesPanel = createSearchCandidatesPanel();
-        tabs.addTab("Search Candidates", searchCandidatesPanel);
+        tabs.addTab("Post New Job", createPostJobPanel());
+        tabs.addTab("Manage Applications", createManageAppsPanel());
+        tabs.addTab("Manage Jobs", createManageJobsPanel());
+        tabs.addTab("Search Candidates", createSearchCandidatesPanel());
 
         add(tabs, BorderLayout.CENTER);
     }
 
     private JPanel createPostJobPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(new Color(245, 245, 250));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JTextField titleField = new JTextField(20);
-        JTextArea descArea = new JTextArea(5, 20);
-        JTextArea reqArea = new JTextArea(3, 20);
+        JTextField titleField = new JTextField(25);
+        JTextArea descArea = new JTextArea(5, 25);
+        JTextArea reqArea = new JTextArea(3, 25);
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        add(new JLabel("Job Title:"), gbc, panel);
+        JLabel titleLabel = new JLabel("Job Title:");
+        titleLabel.setForeground(Color.BLACK);
+        panel.add(titleLabel, gbc);
+
         gbc.gridx = 1;
-        add(titleField, gbc, panel);
+        panel.add(titleField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
-        add(new JLabel("Description:"), gbc, panel);
+        JLabel descLabel = new JLabel("Description:");
+        descLabel.setForeground(Color.BLACK);
+        panel.add(descLabel, gbc);
+
         gbc.gridx = 1;
-        add(new JScrollPane(descArea), gbc, panel);
+        panel.add(new JScrollPane(descArea), gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
-        add(new JLabel("Requirements:"), gbc, panel);
+        JLabel reqLabel = new JLabel("Requirements:");
+        reqLabel.setForeground(Color.BLACK);
+        panel.add(reqLabel, gbc);
+
         gbc.gridx = 1;
-        add(new JScrollPane(reqArea), gbc, panel);
+        panel.add(new JScrollPane(reqArea), gbc);
 
         JButton postBtn = new JButton("Post Job");
-        postBtn.setBackground(new Color(60, 179, 113));
-        postBtn.setForeground(Color.WHITE);
+        styleButton(postBtn, new Color(34, 197, 94), Color.WHITE);
         gbc.gridx = 1;
         gbc.gridy = 3;
-        add(postBtn, gbc, panel);
+        panel.add(postBtn, gbc);
 
         postBtn.addActionListener(e -> {
             User user = DataManager.getInstance().getCurrentUser();
@@ -116,23 +113,24 @@ public class CompanyPanel extends JPanel {
             titleField.setText("");
             descArea.setText("");
             reqArea.setText("");
-            refreshMyJobs(); // Auto-refresh Manage Jobs tab
-            refreshApps(); // Refresh tables if needed
+            refreshMyJobs();
+            refreshApps();
         });
 
         return panel;
     }
 
-    private void add(Component comp, GridBagConstraints gbc, JPanel panel) {
-        panel.add(comp, gbc);
-    }
-
     private JPanel createManageAppsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(245, 245, 250));
 
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        topPanel.setBackground(Color.WHITE);
         JButton refreshBtn = new JButton("Refresh Applications");
+        styleButton(refreshBtn, new Color(59, 130, 246), Color.WHITE);
         refreshBtn.addActionListener(e -> refreshApps());
-        panel.add(refreshBtn, BorderLayout.NORTH);
+        topPanel.add(refreshBtn);
+        panel.add(topPanel, BorderLayout.NORTH);
 
         String[] cols = { "Job Title", "Applicant", "Status" };
         appsModel = new DefaultTableModel(cols, 0);
@@ -140,16 +138,21 @@ public class CompanyPanel extends JPanel {
         styleTable(appsTable);
         panel.add(new JScrollPane(appsTable), BorderLayout.CENTER);
 
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        btnPanel.setBackground(Color.WHITE);
+
         JButton nextStateBtn = new JButton("Move to Next Stage");
+        styleButton(nextStateBtn, new Color(34, 197, 94), Color.WHITE);
         nextStateBtn.addActionListener(e -> moveState());
 
         JButton viewResumeBtn = new JButton("View Resume");
+        styleButton(viewResumeBtn, new Color(59, 130, 246), Color.WHITE);
         viewResumeBtn.addActionListener(e -> viewResume());
 
         JButton viewProfileBtn = new JButton("View Profile");
+        styleButton(viewProfileBtn, new Color(180, 180, 180), Color.BLACK);
         viewProfileBtn.addActionListener(e -> viewApplicantProfile());
 
-        JPanel btnPanel = new JPanel();
         btnPanel.add(nextStateBtn);
         btnPanel.add(viewResumeBtn);
         btnPanel.add(viewProfileBtn);
@@ -160,10 +163,15 @@ public class CompanyPanel extends JPanel {
 
     private JPanel createManageJobsPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(245, 245, 250));
 
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        topPanel.setBackground(Color.WHITE);
         JButton refreshBtn = new JButton("Refresh Jobs");
+        styleButton(refreshBtn, new Color(59, 130, 246), Color.WHITE);
         refreshBtn.addActionListener(e -> refreshMyJobs());
-        panel.add(refreshBtn, BorderLayout.NORTH);
+        topPanel.add(refreshBtn);
+        panel.add(topPanel, BorderLayout.NORTH);
 
         String[] cols = { "Title", "Status" };
         jobsModel = new DefaultTableModel(cols, 0) {
@@ -176,14 +184,19 @@ public class CompanyPanel extends JPanel {
         styleTable(myJobsTable);
         panel.add(new JScrollPane(myJobsTable), BorderLayout.CENTER);
 
-        JPanel btnPanel = new JPanel();
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        btnPanel.setBackground(Color.WHITE);
+
         JButton editBtn = new JButton("Edit Title");
+        styleButton(editBtn, new Color(59, 130, 246), Color.WHITE);
         editBtn.addActionListener(e -> editJob());
 
         JButton toggleBtn = new JButton("Pause/Resume");
+        styleButton(toggleBtn, new Color(245, 158, 11), Color.BLACK);
         toggleBtn.addActionListener(e -> toggleJobStatus());
 
         JButton removeBtn = new JButton("Remove");
+        styleButton(removeBtn, new Color(239, 68, 68), Color.WHITE);
         removeBtn.addActionListener(e -> removeJob());
 
         btnPanel.add(editBtn);
@@ -196,12 +209,21 @@ public class CompanyPanel extends JPanel {
 
     private JPanel createSearchCandidatesPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(245, 245, 250));
 
-        JPanel searchPanel = new JPanel();
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 15));
+        searchPanel.setBackground(Color.WHITE);
+
+        JLabel searchLabel = new JLabel("Name/Email:");
+        searchLabel.setForeground(Color.BLACK);
+
         candidateSearchField = new JTextField(20);
+
         JButton searchBtn = new JButton("Search");
+        styleButton(searchBtn, new Color(59, 130, 246), Color.WHITE);
         searchBtn.addActionListener(e -> searchCandidates());
-        searchPanel.add(new JLabel("Name/Email:"));
+
+        searchPanel.add(searchLabel);
         searchPanel.add(candidateSearchField);
         searchPanel.add(searchBtn);
         panel.add(searchPanel, BorderLayout.NORTH);
@@ -212,17 +234,51 @@ public class CompanyPanel extends JPanel {
         styleTable(candidatesTable);
         panel.add(new JScrollPane(candidatesTable), BorderLayout.CENTER);
 
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 15));
+        btnPanel.setBackground(Color.WHITE);
         JButton viewProfileBtn = new JButton("View Candidate Profile");
+        styleButton(viewProfileBtn, new Color(59, 130, 246), Color.WHITE);
         viewProfileBtn.addActionListener(e -> viewCandidateProfile());
-        panel.add(viewProfileBtn, BorderLayout.SOUTH);
+        btnPanel.add(viewProfileBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
 
         return panel;
+    }
+
+    private void styleButton(JButton btn, Color bg, Color fg) {
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFocusPainted(false);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void styleHeaderButton(JButton btn) {
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(new Color(124, 58, 237));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void styleTable(JTable table) {
+        table.setRowHeight(35);
+        table.setShowVerticalLines(false);
+        table.setIntercellSpacing(new Dimension(0, 1));
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        table.setForeground(Color.BLACK);
+        table.setSelectionBackground(new Color(124, 58, 237));
+        table.setSelectionForeground(Color.WHITE);
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setForeground(Color.BLACK);
     }
 
     private void refreshApps() {
         appsModel.setRowCount(0);
         User user = DataManager.getInstance().getCurrentUser();
-        // Get all jobs for this company
         List<Job> myJobs = DataManager.getInstance().getJobsByCompany(user.getUsername());
 
         for (Job job : myJobs) {
@@ -244,7 +300,7 @@ public class CompanyPanel extends JPanel {
         List<JobApplication> allApps = DataManager.getInstance().getApplicationsByUser(applicant);
         for (JobApplication app : allApps) {
             if (app.getJob().getTitle().equals(jobTitle)) {
-                app.next(); // State Pattern in action
+                app.next();
                 break;
             }
         }
@@ -289,7 +345,6 @@ public class CompanyPanel extends JPanel {
         return null;
     }
 
-    // Job Management Methods
     private void refreshMyJobs() {
         jobsModel.setRowCount(0);
         User user = DataManager.getInstance().getCurrentUser();
@@ -346,7 +401,6 @@ public class CompanyPanel extends JPanel {
                 .findFirst().orElse(null);
     }
 
-    // Candidate Search Methods
     private void searchCandidates() {
         candidatesModel.setRowCount(0);
         String query = candidateSearchField.getText().toLowerCase();
@@ -368,8 +422,6 @@ public class CompanyPanel extends JPanel {
     }
 
     private void showUserProfile(String username) {
-        // In a real app, we'd fetch the user object.
-        // For now, we iterate.
         List<User> applicants = DataManager.getInstance().getAllApplicants();
         User target = applicants.stream().filter(u -> u.getUsername().equals(username)).findFirst().orElse(null);
 
@@ -380,16 +432,5 @@ public class CompanyPanel extends JPanel {
                     "Resume Path: " + app.getResumePath();
             JOptionPane.showMessageDialog(this, info, "Candidate Profile", JOptionPane.INFORMATION_MESSAGE);
         }
-    }
-
-    private void styleTable(JTable table) {
-        table.setRowHeight(30);
-        table.setShowVerticalLines(false);
-        table.setIntercellSpacing(new Dimension(0, 0));
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        table.getTableHeader().setBackground(new Color(240, 240, 240));
-        table.setSelectionBackground(new Color(173, 216, 230)); // Light Blue
-        table.setSelectionForeground(Color.BLACK);
     }
 }
