@@ -9,16 +9,15 @@ public class DataManager {
     private final JobRepository jobRepository;
     private final ApplicationRepository applicationRepository;
 
-    private final SessionManager sessionManager;
     private final LoginService loginService;
+    private User currentUser;
 
     private DataManager() {
         this.userRepository = new InMemoryUserRepository();
         this.jobRepository = new InMemoryJobRepository();
         this.applicationRepository = new InMemoryApplicationRepository();
-        this.sessionManager = new SessionManager();
 
-        RealLoginService realLoginService = new RealLoginService(userRepository, sessionManager);
+        RealLoginService realLoginService = new RealLoginService(userRepository);
         this.loginService = new LoginProxy(realLoginService);
     }
 
@@ -29,22 +28,32 @@ public class DataManager {
         return instance;
     }
 
+    // User operations
     public void registerUser(User user) {
         userRepository.add(user);
     }
 
     public User login(String username, String password) {
-        return loginService.login(username, password);
+        User user = loginService.login(username, password);
+        if (user != null) {
+            this.currentUser = user;
+        }
+        return user;
     }
 
     public void logout() {
-        sessionManager.logout();
+        this.currentUser = null;
     }
 
     public User getCurrentUser() {
-        return sessionManager.getCurrentUser();
+        return currentUser;
     }
 
+    public List<User> getAllApplicants() {
+        return userRepository.findByRole("APPLICANT");
+    }
+
+    // Job operations
     public void addJob(Job job) {
         jobRepository.add(job);
     }
@@ -61,10 +70,7 @@ public class DataManager {
         jobRepository.remove(jobId);
     }
 
-    public List<User> getAllApplicants() {
-        return userRepository.findByRole("APPLICANT");
-    }
-
+    // Application operations
     public void addApplication(JobApplication app) {
         applicationRepository.add(app);
     }
